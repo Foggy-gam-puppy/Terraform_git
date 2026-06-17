@@ -1,0 +1,68 @@
+stages:
+  - validate
+  - plan
+  - apply
+  - deploy
+
+variables:
+  TF_ROOT: terraform
+  K8S_ROOT: kubernetes
+
+# Переменные CI/CD (задать в GitLab)
+# - TF_VAR_my_ip: "0.0.0.0/0"
+# - TF_VAR_project_name: "my-project"
+
+# 1. Проверка Terraform
+terraform_validate:
+  stage: validate
+  image: hashicorp/terraform:latest
+  script:
+    - cd $TF_ROOT
+    - terraform init
+    - terraform validate
+  only:
+    - merge_requests
+    - main
+
+# 2. План Terraform
+terraform_plan:
+  stage: plan
+  image: hashicorp/terraform:latest
+  script:
+    - cd $TF_ROOT
+    - terraform init
+    - terraform plan -out=plan.tfplan
+  artifacts:
+    paths:
+      - $TF_ROOT/plan.tfplan
+    expire_in: 1 day
+  only:
+    - merge_requests
+    - main
+
+# 3. Применение Terraform (только в main)
+terraform_apply:
+  stage: apply
+  image: hashicorp/terraform:latest
+  script:
+    - cd $TF_ROOT
+    - terraform init
+    - terraform apply -auto-approve plan.tfplan
+  only:
+    - main
+  environment:
+    name: production
+  when: manual  # Требует ручного подтверждения
+
+# 4. Развертывание в Kubernetes
+kubectl_deploy:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - kubectl apply -f $K8S_ROOT/
+  only:
+    - main
+  environment:
+    name: production
+  needs:
+    - terraform_apply

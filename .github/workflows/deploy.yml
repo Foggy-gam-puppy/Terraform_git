@@ -20,20 +20,28 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
+  # 1. Проверка Terraform
   terraform_validate:
     name: "terraform_validate"
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Create tfvars file
+      run: |
+        echo "${{ secrets.TFVARS_DATA }}" > terraform.tfvars
+
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
+
     - name: Script
       run: |
         cd $TF_ROOT
         terraform init
         terraform validate
 
+  # 2. План Terraform
   terraform_plan:
     name: "terraform_plan"
     needs: terraform_validate
@@ -41,13 +49,20 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Create tfvars file
+      run: |
+        echo "${{ secrets.TFVARS_DATA }}" > terraform.tfvars
+
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
+
     - name: Script
       run: |
         cd $TF_ROOT
         terraform init
-        terraform plan -out=plan.tfplan
+        terraform plan -out=plan.tfplan -input=false
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -55,6 +70,7 @@ jobs:
         path: plan.tfplan
         retention-days: 1
 
+  # 3. Применение Terraform (только в main)
   terraform_apply:
     name: "terraform_apply"
     needs: terraform_plan
@@ -64,19 +80,27 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Create tfvars file
+      run: |
+        echo "${{ secrets.TFVARS_DATA }}" > terraform.tfvars
+
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
+
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
         name: tf-plan
         path: .
+
     - name: Script
       run: |
         cd $TF_ROOT
         terraform init
-        terraform apply -auto-approve plan.tfplan
+        terraform apply -auto-approve plan.tfplan -input=false
 
+  # 4. Развертывание в Kubernetes
   kubectl_deploy:
     name: "kubectl_deploy"
     needs: terraform_apply
@@ -86,8 +110,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
     - name: Setup kubectl
       uses: azure/setup-kubectl@v4
+
     - name: Script
       run: |
         echo "Разворачиваем манифесты в Kubernetes..."

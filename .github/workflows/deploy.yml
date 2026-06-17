@@ -52,7 +52,7 @@ jobs:
 
     - name: Create tfvars file
       run: |
-        echo "${{ secrets.TFVARS_DATA }}" > terraform.tfvars
+        echo "${{ secrets.TFVARS_DATA }}" >./terraform.tfvars
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3

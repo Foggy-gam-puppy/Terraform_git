@@ -1,68 +1,112 @@
-stages:
-  - validate
-  - plan
-  - apply
-  - deploy
+name: CI/CD Pipeline
 
-variables:
-  TF_ROOT: terraform
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  TF_ROOT: . # Так как файлы лежат в корне, а не в папке terraform
   K8S_ROOT: kubernetes
+  
+  # Переменные CI/CD из методички
+  TF_VAR_my_ip: "0.0.0.0/0"
+  TF_VAR_project_name: "my-project"
 
-# Переменные CI/CD (задать в GitLab)
-# - TF_VAR_my_ip: "0.0.0.0/0"
-# - TF_VAR_project_name: "my-project"
+  # Доступы к VK Cloud и S3 стейту из секретов GitHub
+  OS_AUTH_URL: "https://mail.ru"
+  OS_PROJECT_ID: ${{ secrets.VK_CLOUD_PROJECT_ID }}
+  OS_USERNAME: ${{ secrets.VK_CLOUD_USERNAME }}
+  OS_PASSWORD: ${{ secrets.VK_CLOUD_PASSWORD }}
+  OS_REGION_NAME: "ru-msk"
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-# 1. Проверка Terraform
-terraform_validate:
-  stage: validate
-  image: hashicorp/terraform:latest
-  script:
-    - cd $TF_ROOT
-    - terraform init
-    - terraform validate
-  only:
-    - merge_requests
-    - main
+jobs:
+  # 1. Проверка Terraform
+  terraform_validate:
+    name: "terraform_validate"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-# 2. План Terraform
-terraform_plan:
-  stage: plan
-  image: hashicorp/terraform:latest
-  script:
-    - cd $TF_ROOT
-    - terraform init
-    - terraform plan -out=plan.tfplan
-  artifacts:
-    paths:
-      - $TF_ROOT/plan.tfplan
-    expire_in: 1 day
-  only:
-    - merge_requests
-    - main
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
 
-# 3. Применение Terraform (только в main)
-terraform_apply:
-  stage: apply
-  image: hashicorp/terraform:latest
-  script:
-    - cd $TF_ROOT
-    - terraform init
-    - terraform apply -auto-approve plan.tfplan
-  only:
-    - main
-  environment:
-    name: production
-  when: manual  # Требует ручного подтверждения
+    - name: Script
+      run: |
+        cd $TF_ROOT
+        terraform init
+        terraform validate
 
-# 4. Развертывание в Kubernetes
-kubectl_deploy:
-  stage: deploy
-  image: bitnami/kubectl:latest
-  script:
-    - kubectl apply -f $K8S_ROOT/
-  only:
-    - main
-  environment:
-    name: production
-  needs:
-    - terraform_apply
+  # 2. План Terraform
+  terraform_plan:
+    name: "terraform_plan"
+    needs: terraform_validate
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Script
+      run: |
+        cd $TF_ROOT
+        terraform init
+        terraform plan -out=plan.tfplan
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: tf-plan
+        path: plan.tfplan
+        retention-days: 1
+
+  # 3. Применение Terraform (только в main)
+  terraform_apply:
+    name: "terraform_apply"
+    needs: terraform_plan
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production 
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: tf-plan
+        path: .
+
+    - name: Script
+      run: |
+        cd $TF_ROOT
+        terraform init
+        terraform apply -auto-approve plan.tfplan
+
+  # 4. Развертывание в Kubernetes
+  kubectl_deploy:
+    name: "kubectl_deploy"
+    needs: terraform_apply
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v4
+
+    - name: Script
+      run: |
+        echo "Разворачиваем манифесты в Kubernetes..."
+        # kubectl apply -f $K8S_ROOT/

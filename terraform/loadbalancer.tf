@@ -46,3 +46,14 @@ resource "vkcs_lb_member" "web_servers_members" {
   # ИСПРАВЛЕНО: Надежный способ забрать IP-адрес через готовые порты
   address       = vkcs_networking_port.web_server_port[each.key].all_fixed_ips[0]
 }
+
+
+# Автоматическая генерация ConfigMap для Kubernetes средствами Terraform
+resource "local_file" "k8s_configmap" {
+  content = templatefile("${path.module}/templates/configmap.yaml.tpl", {
+    # Берем IP-адрес твоего балансировщика из VK Cloud (имя "lb")
+    lb_ip = vkcs_lb_loadbalancer.lb.vip_address
+  })
+  # Файл сгенерируется прямо в твоей папке kubernetes/ в корне репозитория
+  filename = "${path.module}/kubernetes/configmap.yaml"
+}

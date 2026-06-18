@@ -21,6 +21,6 @@ terraform {
 }
 
 provider "vkcs" {
-  # 잡桎鳥裔打 了 vkrc
+
 }
 

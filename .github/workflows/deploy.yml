@@ -7,7 +7,7 @@ on:
 env:
   TF_ROOT: .
   # Переменные авторизации в VK Cloud
-  OS_AUTH_URL: "https://mail.ru"
+  OS_AUTH_URL: ${{ secrets.OS_AUTH_URL }}
   OS_PROJECT_ID: ${{ secrets.VK_CLOUD_PROJECT_ID }}
   OS_USERNAME: ${{ secrets.VK_CLOUD_USERNAME }}
   OS_PASSWORD: ${{ secrets.VK_CLOUD_PASSWORD }}
@@ -15,7 +15,7 @@ env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-  # ВСЕ ТВОИ ПЕРЕМЕННЫЕ ИЗ TFVARS (С жесткими кавычками)
+  # Переменные из TFVARS
   TF_VAR_project_name: "2-lab"
   TF_VAR_availability_zone: "MS1"
   TF_VAR_public_cidr: "10.0.1.0/24"
@@ -25,7 +25,7 @@ env:
   TF_VAR_flavor: "Basic-1-1-10"
   TF_VAR_db_flavor: "STD2-2-8"
   TF_VAR_my_ip: "37.19.72.245"
-  TF_VAR_db_password: ${{ secrets.DB_PASSWORD }} # Пароль спрятан в секрет ради безопасности
+  TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
 
 jobs:
   terraform_validate:

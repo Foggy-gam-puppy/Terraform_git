@@ -24,7 +24,7 @@ output "database_private_ip" {
   description = "Internal IP (Host) for db PostgreSQL"
 }
 
-# 5. Имя базы данных (Требование задания методички)
+# 5. Имя базы данных 
 output "database_name" {
   value       = vkcs_db_database.lab2_db.name
   description = "Name of the PostgreSQL database"

@@ -6,9 +6,13 @@ on:
 
 # Общие переменные окружения для всех шагов пайплайна
 env:
-  # Переменные для самой лабы
+  # Переменные для лабы (старые)
   TF_VAR_my_ip: ${{ secrets.TF_VAR_my_ip }}
   TF_VAR_project_name: ${{ secrets.TF_VAR_project_name }}
+  
+  # Новые переменные, которые потребовал Terraform
+  TF_VAR_key_pair: ${{ secrets.TF_VAR_key_pair }}
+  TF_VAR_db_password: ${{ secrets.TF_VAR_db_password }}
   
   # Переменные для авторизации провайдера VK Cloud
   VK_CLOUD_USERNAME: ${{ secrets.VK_CLOUD_USERNAME }}

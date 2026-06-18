@@ -30,7 +30,8 @@ provider "kubernetes" {
 
 }
 
-data "kubernetes_service" "ingress_nginx" {
+# Используем новый тип данных _v1, чтобы убрать Warning
+data "kubernetes_service_v1" "ingress_nginx" {
   metadata {
     name      = "ingress-nginx-controller"
     namespace = "ingress-nginx"
@@ -44,7 +45,7 @@ resource "kubernetes_config_map" "lb_ip_config" {
   }
 
   data = {
-    # ПРАВИЛЬНЫЙ СИНТАКСИС ДЛЯ TERRAFORM:
-    balancer_ip = data.kubernetes_service.ingress_nginx.status.0.load_balancer.0.ingress.0.ip
+    # Новый чистый синтаксис без лишних индексов
+    balancer_ip = data.kubernetes_service_v1.ingress_nginx.status.0.load_balancer.0.ingress.0.ip
   }
 }

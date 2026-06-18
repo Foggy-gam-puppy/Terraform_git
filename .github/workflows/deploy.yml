@@ -29,6 +29,10 @@ jobs:
     name: 'Terraform Run'
     runs-on: ubuntu-latest
     
+    permissions:
+      issues: write
+      contents: read
+      
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4

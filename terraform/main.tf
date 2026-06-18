@@ -25,27 +25,3 @@ provider "vkcs" {
   # 잡桎鳥裔打 了 vkrc
 }
 
-provider "kubernetes" {
-  # Указываем путь к твоему файлу кубернетиса, который лежит в репозитории
-
-}
-
-# Используем новый тип данных _v1, чтобы убрать Warning
-data "kubernetes_service_v1" "ingress_nginx" {
-  metadata {
-    name      = "ingress-nginx-controller"
-    namespace = "ingress-nginx"
-  }
-}
-
-resource "kubernetes_config_map" "lb_ip_config" {
-  metadata {
-    name      = "balancer-config"
-    namespace = "my-app-prod"
-  }
-
-  data = {
-    # Новый чистый синтаксис без лишних индексов
-    balancer_ip = data.kubernetes_service_v1.ingress_nginx.status.0.load_balancer.0.ingress.0.ip
-  }
-}

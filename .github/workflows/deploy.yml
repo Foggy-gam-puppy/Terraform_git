@@ -11,7 +11,7 @@ env:
   K8S_ROOT: kubernetes
   TF_VAR_my_ip: "0.0.0.0/0"
   TF_VAR_project_name: "my-project"
-  OS_AUTH_URL: "https://mail.ru"
+  OS_AUTH_URL: "https://msk.cloud.vk.com/infra/identity/v3/"
   OS_PROJECT_ID: ${{ secrets.VK_CLOUD_PROJECT_ID }}
   OS_USERNAME: ${{ secrets.VK_CLOUD_USERNAME }}
   OS_PASSWORD: ${{ secrets.VK_CLOUD_PASSWORD }}

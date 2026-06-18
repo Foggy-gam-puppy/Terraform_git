@@ -8,7 +8,6 @@ terraform {
     }
   }
 
-  # 줍脚羔 켑慨터 줆農 喫近촘 픔턺 INSIDE TERRAFORM!
   backend "s3" {
     bucket                      = "terraform-state-foggy-lab2"
     key                         = "lab2/terraform.tfstate"

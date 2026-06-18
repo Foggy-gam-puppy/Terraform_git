@@ -1,6 +1,6 @@
 
 data "vkcs_compute_flavor" "db_flavor_uuid" {
-  name = var.db_flavor # Ищет текстовое имя "STD2-2-8"
+  name = var.db_flavor # "STD2-2-8"
 }
 
 # 1. Инстанс СУБД PostgreSQL
@@ -20,8 +20,6 @@ resource "vkcs_db_instance" "db" {
    
   network {
     subnet_id = vkcs_networking_subnet.private_subnet.id
-    
-    # ИСПРАВЛЕНО: Привязываем нашу группу безопасности со строгими правилами!
     security_groups = [vkcs_networking_secgroup.db_sg.id]
   }
 
@@ -37,7 +35,7 @@ resource "vkcs_db_database" "lab2_db" {
 # 3. Создание пользователя для веб-приложения
 resource "vkcs_db_user" "pg_user" { 
   name      = "webapp"
-  password  = var.db_password # Секретный пароль из ваших переменных
+  password  = var.db_password 
   dbms_id   = vkcs_db_instance.db.id
   databases = [vkcs_db_database.lab2_db.name]
 

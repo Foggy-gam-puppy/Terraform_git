@@ -23,14 +23,14 @@ variable "key_pair"{
 variable "flavor"{
 
  type        = string
- default     = "Basic-1-1-10" # Тот самый проверенный тариф VK Cloud
+ default     = "Basic-1-1-10" 
  description = "Flavor for web servers and bastion"
 }
 
 variable "db_flavor"{
 
  type        = string
- default     = "STD2-2-8" # Тот самый проверенный тариф VK Cloud
+ default     = "STD2-2-8" 
  description = "Flavor for database"
 
 }

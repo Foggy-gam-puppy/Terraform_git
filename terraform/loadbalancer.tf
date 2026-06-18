@@ -52,7 +52,7 @@ resource "vkcs_lb_member" "web_servers_members" {
 
 
 
-esource "local_file" "k8s_configmap" {
+resource "local_file" "k8s_configmap" {
   # Указываем путь к шаблону на уровень выше (в корень проекта)
   content = templatefile("${path.module}/../templates/configmap.yaml.tpl", {
     lb_ip = vkcs_lb_loadbalancer.lb.vip_address

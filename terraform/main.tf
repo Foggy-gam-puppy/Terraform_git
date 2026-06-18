@@ -8,7 +8,7 @@ terraform {
     }
   }
 
-  # ÁİÊÅÍÄ ÄÎËÆÅÍ ÁÛÒÜ ÑÒĞÎÃÎ ÇÄÅÑÜ INSIDE TERRAFORM!
+  # ì¤è„šç¾” ì¼‘æ…¨í„° ì¤†è¾² å–«è¿‘ì´˜ í””í„º INSIDE TERRAFORM!
   backend "s3" {
     bucket                      = "terraform-state-foggy-lab2"
     key                         = "lab2/terraform.tfstate"
@@ -22,5 +22,24 @@ terraform {
 }
 
 provider "vkcs" {
-  # Àâòîğèçàöèÿ èç vkrc
+  # ì¡æ¡é³¥è£”æ‰“ ï¦º vkrc
+}
+
+data "kubernetes_service" "ingress_nginx" {
+  metadata {
+    name      = "ingress-nginx-controller"
+    namespace = "ingress-nginx"
+  }
+}
+
+resource "kubernetes_config_map" "lb_ip_config" {
+  metadata {
+    name      = "balancer-config"
+    namespace = "my-app-prod"
+  }
+
+  data = {
+    # ĞŸĞ ĞĞ’Ğ˜Ğ›Ğ¬ĞĞ«Ğ™ Ğ¡Ğ˜ĞĞ¢ĞĞšĞ¡Ğ˜Ğ¡ Ğ”Ğ›Ğ¯ TERRAFORM:
+    balancer_ip = data.kubernetes_service.ingress_nginx.status.0.load_balancer.0.ingress.0.ip
+  }
 }

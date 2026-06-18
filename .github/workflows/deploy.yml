@@ -52,7 +52,7 @@ jobs:
       uses: trstringer/manual-approval@v1
       with:
         secret: ${{ secrets.GITHUB_TOKEN }}
-        approvers: твоё_имя_пользователя_в_github # Укажи свой ник на гитхабе, чтобы подтверждать
+        approvers: Foggy-gam-puppy # Укажи свой ник на гитхабе, чтобы подтверждать
         minimum-approvals: 1
         issue-title: "Проверка плана Terraform перед Apply"
 

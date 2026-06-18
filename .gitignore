@@ -7,3 +7,4 @@
 *.tfvars.json
 *.save*
 *:Zone.Identifier
+*_Zone.Identifier

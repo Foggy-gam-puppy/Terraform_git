@@ -28,11 +28,15 @@ jobs:
   terraform_pipeline:
     name: 'Terraform Run'
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./terraform
     
     permissions:
       issues: write
       contents: read
-      
+
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4

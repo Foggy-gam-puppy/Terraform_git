@@ -25,6 +25,11 @@ provider "vkcs" {
   # 잡桎鳥裔打 了 vkrc
 }
 
+provider "kubernetes" {
+  # Указываем путь к твоему файлу кубернетиса, который лежит в репозитории
+  config_path = "${path.module}/kubernetes/k8s_kubeconfig.yaml"
+}
+
 data "kubernetes_service" "ingress_nginx" {
   metadata {
     name      = "ingress-nginx-controller"

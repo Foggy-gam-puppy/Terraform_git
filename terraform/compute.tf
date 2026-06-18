@@ -1,12 +1,11 @@
-# =================================================================
-# 1. WEB СЕРВЕРЫ
-# =================================================================
+
+# группа безопастности серверов
+
 resource "vkcs_networking_secgroup" "web_sg" {
   name        = "web-sg"
   description = "Security group for web-interface"
 }
 
-# ИСПРАВЛЕНО: Убрана русская "с", убраны name/description
 resource "vkcs_networking_secgroup_rule" "web_ssh" {
   security_group_id = vkcs_networking_secgroup.web_sg.id
   direction         = "ingress"
@@ -16,7 +15,6 @@ resource "vkcs_networking_secgroup_rule" "web_ssh" {
   remote_group_id   = vkcs_networking_secgroup.bastion_sg.id 
 }
 
-# ИСПРАВЛЕНО: Восстановлена буква "c" в secgroup, привязано к группе балансировщика
 resource "vkcs_networking_secgroup_rule" "web_http" {
   security_group_id = vkcs_networking_secgroup.web_sg.id
   direction         = "ingress"
@@ -26,15 +24,13 @@ resource "vkcs_networking_secgroup_rule" "web_http" {
   remote_group_id   = vkcs_networking_secgroup.lb_sg.id # Трафик пойдет строго от балансировщика
 }
 
-# =================================================================
-# 2. БАСТИОН
-# =================================================================
+# группа безопастности бастиона
+
 resource "vkcs_networking_secgroup" "bastion_sg" {
   name        = "bastion-sg"
   description = "Security group for bastion"
 }
 
-# ИСПРАВЛЕНО: Добавлены все недостающие сетевые параметры и порты для входа на Бастион
 resource "vkcs_networking_secgroup_rule" "bastion_ssh" {
   security_group_id = vkcs_networking_secgroup.bastion_sg.id
   direction         = "ingress"
@@ -44,9 +40,8 @@ resource "vkcs_networking_secgroup_rule" "bastion_ssh" {
   remote_ip_prefix  = var.my_ip # Доступ только с вашего IP
 }
 
-# =================================================================
-# 3. БАЗА ДАННЫХ (DB)
-# =================================================================
+# группа безопастности бд
+
 resource "vkcs_networking_secgroup" "db_sg" {
   name        = "db-sg"
   description = "Security group for database"
@@ -70,7 +65,6 @@ resource "vkcs_networking_secgroup_rule" "PostgreSQL" {
   remote_ip_prefix  = var.lab2_private # Доступ только из приватной подсети
 }
 
-# ИСПРАВЛЕНО: Удален неверный аргумент full_security_groups_control
 resource "vkcs_networking_secgroup_rule" "db_egress_http" {
   security_group_id = vkcs_networking_secgroup.db_sg.id
   direction         = "egress"
@@ -80,7 +74,6 @@ resource "vkcs_networking_secgroup_rule" "db_egress_http" {
   remote_ip_prefix  = "0.0.0.0/0"
 }
 
-# ИСПРАВЛЕНО: Удален неверный аргумент full_security_groups_control
 resource "vkcs_networking_secgroup_rule" "db_egress_https" {
   security_group_id = vkcs_networking_secgroup.db_sg.id
   direction         = "egress"
@@ -90,9 +83,8 @@ resource "vkcs_networking_secgroup_rule" "db_egress_https" {
   remote_ip_prefix  = "0.0.0.0/0"
 }
 
-# =================================================================
-# 4. БАЛАНСИРОВЩИК (LB)
-# =================================================================
+# группа безопастности балансировщика
+
 resource "vkcs_networking_secgroup" "lb_sg" {
   name        = "lb-sg"
   description = "Security group for web-loadbalancer"
@@ -116,9 +108,7 @@ resource "vkcs_networking_secgroup_rule" "lb_https" {
   remote_ip_prefix  = "0.0.0.0/0"
 }
 
-# =================================================================
-# 5. Создание бастиона и веб-серверов
-# =================================================================
+# создание бастиона и серверов
 
 data "vkcs_images_image" "packer_image" {
   name        = var.image_name 
@@ -150,7 +140,6 @@ resource "vkcs_compute_instance" "bastion" {
   }
 }
 resource "vkcs_compute_instance" "web_server" {
-  # Создаем два сервера: "1" и "2"
   for_each = toset(["1", "2"])
 
   name              = "${var.project_name}-web-${each.key}"
@@ -167,9 +156,11 @@ resource "vkcs_compute_instance" "web_server" {
     delete_on_termination = true
   }
 
-  # ПОДКЛЮЧАЕМ ПОРТ:
   network {
-    # Сервер "1" заберет порт "1", сервер "2" заберет порт "2"
     port = vkcs_networking_port.web_server_port[each.key].id
   }
+  user_data = <<-EOF
+              #!/bin/bash
+              echo "<h1>Hello from Web Server ${each.key}!</h1>" | sudo tee /var/www/html/index.html
+              EOF
 }
